@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:turnhouse/Basic_Feature/Customer_center.dart';
 import 'package:turnhouse/Basic_Feature/Broadcast.dart';
 import 'package:turnhouse/Basic_Feature/Message.dart';
 import 'package:turnhouse/Basic_Feature/Event.dart';
 import 'package:turnhouse/Basic_Feature/town_info.dart';
 import 'package:turnhouse/MyLocation.dart';
-import 'package:turnhouse/http_get.dart';
+import 'package:turnhouse/http_func.dart';
 import 'package:easy_rich_text/easy_rich_text.dart';
 import 'package:flutter/services.dart';
-import 'dart:convert';
 import 'package:turnhouse/Item_data.dart';
 
 const apiKey = '38c5dd9bd8cfd2ef10e5d910725383c9';
 
-class MainWidget extends StatefulWidget {
+class MainWidget extends StatefulWidget {//
   const MainWidget({Key? key}) : super(key: key);
 
   @override
@@ -52,6 +52,8 @@ class _MainWidgetState extends State<MainWidget> {
         weatherData["weather"][0]["id"]
     );
 
+    print("유져 고유번호 : " + context.read<User_info>().user_id);
+    print("마을 고유번호 : " + context.read<User_info>().town_id);
     print('(디버깅)최고/최저 온도: ' + weather.temp.toString() + ' ' + weather.tempMin.toString());
     return weather;
   }
@@ -60,6 +62,9 @@ class _MainWidgetState extends State<MainWidget> {
   Widget build(BuildContext context) {
     //회전 방지
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+
+    var width = MediaQuery.of(context).size.width;
+    var height = MediaQuery.of(context).size.height;
     
     return Scaffold(
       key: scaffoldKey,
@@ -74,16 +79,12 @@ class _MainWidgetState extends State<MainWidget> {
             return Column(
               mainAxisSize: MainAxisSize.max,
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              //일단 균등하게 배치함
-              //crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Row(
-                  //mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Container(
-                      //alignment: Alignment.centerRight,
                       width: 100,
                       height: 100,
                       //padding: EdgeInsetsDirectional.fromSTEB(0, 10, 0, 10),
@@ -92,7 +93,6 @@ class _MainWidgetState extends State<MainWidget> {
                       ),
                     ),
                     Container(
-                      //alignment: right,
                       width: 210,
                       height: 65,
                       child:ElevatedButton.icon(
@@ -125,15 +125,16 @@ class _MainWidgetState extends State<MainWidget> {
                       borderRadius: BorderRadius.circular(12),
                     color: Color(0xFF252735),
                   ),
+                  width: width * 0.8,
+                  height: height * 0.2,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-
                     children: <Widget>[
                       Container(
                         alignment: Alignment.centerLeft,
-                        width: 150,
-                        height: 150,
-                        //padding: EdgeInsetsDirectional.fromSTEB(0, 10, 0, 10),
+                        width: width * 0.3,
+                        height: height * 0.2,
+                        padding: EdgeInsetsDirectional.fromSTEB(width * 0.02, 0, 0, 0),
                         child: snapshot.data!.code == 800
                             ? Icon(Icons.wb_sunny, size: 100, color: Colors.white)
                             : snapshot.data!.code / 100 == 8 ||
@@ -149,22 +150,27 @@ class _MainWidgetState extends State<MainWidget> {
 
 
                       // 온도
-                      EasyRichText(
-                      '현재 온도 : ${snapshot.data?.temp}°\n\n'
-                          '${snapshot.data?.tempMin}°  /  '
-                          '${snapshot.data?.tempMax}°',
-                        defaultStyle: TextStyle(fontSize: 30, color: Colors.white),
-                        patternList: [
-                          EasyRichTextPattern(
-                            targetString: '${snapshot.data?.tempMin}°',
-                            style: TextStyle(color: Colors.blue),
-                          ),
-                          EasyRichTextPattern(
-                            targetString: '${snapshot.data?.tempMax}°',
-                            style: TextStyle(color: Colors.red),
-                          ),
-                        ],
-                        textAlign: TextAlign.center,
+                      Container(
+                        alignment: Alignment.center,
+                        width: width * 0.4,
+                        height: height * 0.2,
+                        child: EasyRichText(
+                        '현재 온도 : ${snapshot.data?.temp}°\n\n'
+                            '${snapshot.data?.tempMin}°  /  '
+                            '${snapshot.data?.tempMax}°',
+                          defaultStyle: TextStyle(fontSize: 16, color: Colors.white),
+                          patternList: [
+                            EasyRichTextPattern(
+                              targetString: '${snapshot.data?.tempMin}°',
+                              style: TextStyle(color: Colors.blue),
+                            ),
+                            EasyRichTextPattern(
+                              targetString: '${snapshot.data?.tempMax}°',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ],
+                          textAlign: TextAlign.center,
+                        ),
                       ),
 
                     ],
@@ -174,15 +180,15 @@ class _MainWidgetState extends State<MainWidget> {
                 Row(
 
                   mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Padding(
                       padding: EdgeInsetsDirectional.fromSTEB(10, 10, 10, 10),
 
                       child:Container(
-                        width: 150,
-                        height: 150,
+                        width: width * 0.35,
+                        height: height * 0.2,
                         child:ElevatedButton(
                           onPressed: () {
                             print('summit pressed ...');
@@ -193,11 +199,12 @@ class _MainWidgetState extends State<MainWidget> {
                             );
                           },
                           style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all(Color(0xFF252735)),
+                            //backgroundColor: MaterialStateProperty.all(Colors.deepPurpleAccent),
+                            //backgroundColor: MaterialStateProperty.all(Color(0xFF252735)),
                             //textStyle: GoogleFonts.lato(color: Colors.white),
                           ),
                           child: Text(
-                            '문자하기',
+                            '문자\n하기',
                             style: GoogleFonts.lato(
                               color: Colors.white,
                               fontSize: 30,
@@ -212,8 +219,8 @@ class _MainWidgetState extends State<MainWidget> {
                       child: Padding(
                         padding: EdgeInsetsDirectional.fromSTEB(10, 10, 10, 10),
                         child:Container(
-                          width: 150,
-                          height: 150,
+                          width: width * 0.35,
+                          height: height * 0.2,
                           child:ElevatedButton(
                             onPressed: () {
                               print('summit pressed ...');
@@ -224,11 +231,12 @@ class _MainWidgetState extends State<MainWidget> {
                               );
                             },
                             style: ButtonStyle(
-                              backgroundColor: MaterialStateProperty.all(Color(0xFF252735)),
+                              //backgroundColor: MaterialStateProperty.all(Colors.deepPurpleAccent),
+                              //backgroundColor: MaterialStateProperty.all(Color(0xFF252735)),
                               //textStyle: GoogleFonts.lato(color: Colors.white),
                             ),
                             child: Text(
-                              '방송하기',
+                              '방송\n하기',
                               style: GoogleFonts.lato(
                                 color: Colors.white,
                                 fontSize: 30,
@@ -246,15 +254,15 @@ class _MainWidgetState extends State<MainWidget> {
                 Row(
 
                   mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Padding(
                       padding: EdgeInsetsDirectional.fromSTEB(10, 10, 10, 10),
 
                       child:Container(
-                        width: 150,
-                        height: 150,
+                        width: width * 0.35,
+                        height: height * 0.2,
                         child:ElevatedButton(
                           onPressed: () {
                             print('summit pressed ...');
@@ -265,11 +273,12 @@ class _MainWidgetState extends State<MainWidget> {
                             );
                           },
                           style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all(Color(0xFF252735)),
+                            //backgroundColor: MaterialStateProperty.all(Colors.deepPurpleAccent),
+                            //backgroundColor: MaterialStateProperty.all(Color(0xFF252735)),
                             //textStyle: GoogleFonts.lato(color: Colors.white),
                           ),
                           child: Text(
-                            '행사관리',
+                            '행사\n관리',
                             style: GoogleFonts.lato(
                               color: Colors.white,
                               fontSize: 30,
@@ -284,8 +293,8 @@ class _MainWidgetState extends State<MainWidget> {
                       child: Padding(
                         padding: EdgeInsetsDirectional.fromSTEB(10, 10, 10, 10),
                         child:Container(
-                          width: 150,
-                          height: 150,
+                          width: width * 0.35,
+                          height: height * 0.2,
                           child:ElevatedButton(
                             onPressed: () {
                               print('summit pressed ...');
@@ -296,11 +305,12 @@ class _MainWidgetState extends State<MainWidget> {
                               );
                             },
                             style: ButtonStyle(
-                              backgroundColor: MaterialStateProperty.all(Color(0xFF252735)),
+                              //backgroundColor: MaterialStateProperty.all(Colors.deepPurpleAccent),
+                              //backgroundColor: MaterialStateProperty.all(Color(0xFF252735)),
                               //textStyle: GoogleFonts.lato(color: Colors.white),
                             ),
                             child: Text(
-                              '마을정보',
+                              '마을\n정보',
                               style: GoogleFonts.lato(
                                 color: Colors.white,
                                 fontSize: 30,

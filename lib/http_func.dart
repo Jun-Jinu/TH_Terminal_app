@@ -48,3 +48,22 @@ class Http_post {
 
   }
 }
+
+class Http_delete {
+  final String url;
+  Http_delete(this.url);
+
+  Future<dynamic> getJsonData() async {
+
+    print("1c " + url);
+    http.Response response = await http.delete(Uri.parse(url));
+    print(response.body);
+    if (response.statusCode == 200) {
+      String jsonData = response.body;
+      var parsingData = jsonDecode(jsonData);
+      return parsingData;
+    }
+    else
+      print('연결실패');
+  }
+}

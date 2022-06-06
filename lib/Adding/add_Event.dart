@@ -1,10 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:turnhouse/Item_data.dart';
 import 'package:intl/intl.dart';
-import 'package:datetime_picker_formfield/datetime_picker_formfield.dart';
-
+import 'dart:convert';
+import 'package:turnhouse/http_func.dart';
+import 'package:turnhouse/Basic_Feature/Event.dart';
 
 class add_Event extends StatefulWidget {
   const add_Event({Key? key}) : super(key: key);
@@ -17,18 +19,33 @@ class _add_EventWidgetState extends State<add_Event> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final _formKey = GlobalKey<FormState>();
 
-  //카테고리 드롭 버튼 설정
-  final _valueList = ['행사 종류를 선택하세요.','일반 행사', '긴급 행사'];
-  var _selectedValue = '행사 종류를 선택하세요.';
-  
-  //날짜 설정
-  final format = DateFormat("yyyy-MM-dd HH:mm");
+  Future<String> add_new_event() async {
+    final String url = "http://3.39.183.150:8080/api/events/";
+    Map data = {"townId": int.parse(context.read<User_info>().town_id), "title": _title.text, "content": _content.text, "fromEventDate": fromEventData.text, "toEventDate": toEventDate.text };
 
-  var _title = TextEditingController();
-  var _content = TextEditingController();
+    var body = json.encode(data);
+    String status;
+
+    Http_post post_data = Http_post(url, body);
+
+    var event_data = await post_data.getJsonData();
+
+    //status로 받아와서 성공여부만 표시
+    status = event_data['status'];
+
+    return status;
+  }
+
+  var fromEventData = TextEditingController();//행사시작
+  var toEventDate = TextEditingController();//행사 끝
+  var _title = TextEditingController();//제목
+  var _content = TextEditingController();//내용
+
 
   @override
   void dispose(){
+    fromEventData.dispose();
+    toEventDate.dispose();
     _title.dispose();
     _content.dispose();
     super.dispose();
@@ -89,11 +106,27 @@ class _add_EventWidgetState extends State<add_Event> {
 
                 Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: DateTimeField(
-                    format: format,
+                  child: TextFormField(
+                    controller: fromEventData,
+                    readOnly: true,
+                    onTap: () async {
+                      DateTime? pickedDate = await showDatePicker(
+                          context: context, initialDate: DateTime.now(),
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime(2100)
+                      );
+
+                      if(pickedDate != null ){
+                        String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
+                        setState(() {
+                          fromEventData.text = formattedDate;
+                        });
+                      }
+                      print(fromEventData.text);
+                    },
                     validator: (value){
                       if(value == null){
-                        return '행사 시작 일자와 시간을 입력해주세요';
+                        return '행사 시작 일자를 입력해주세요';
                       }
                       return null;
                     },
@@ -101,26 +134,76 @@ class _add_EventWidgetState extends State<add_Event> {
                       color: Colors.black87,
                       fontSize: 24,
                     ),
-                    onShowPicker: (context, currentValue) async {
-                      final date = await showDatePicker(
-                          context: context,
-                          firstDate: DateTime(1900),
-                          initialDate: currentValue ?? DateTime.now(),
-                          lastDate: DateTime(2100));
-                      if (date != null) {
-                        final time = await showTimePicker(
-                          context: context,
-                          initialTime:
-                          TimeOfDay.fromDateTime(currentValue ?? DateTime.now()),
-                        );
-                        return DateTimeField.combine(date, time);
-                      } else {
-                        return currentValue;
-                      }
-                    },
                     decoration: InputDecoration(
                       labelText: '행사 시작',
-                      hintText: '행사 시작 날과 시간을 입력해주세요.',
+                      hintText: '행사 시작 날을 입력해주세요.',
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Colors.blue,
+                          width: 1.5,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Color(0xFF4291F2),
+                          width: 3,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      errorBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Colors.redAccent,
+                          width: 1.5,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      focusedErrorBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Colors.redAccent,
+                          width: 3,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
+                  ),
+                ),
+
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: TextFormField(
+                    controller: toEventDate,
+                    readOnly: true,
+                    onTap: () async {
+                      DateTime? pickedDate = await showDatePicker(
+                          context: context, initialDate: DateTime.now(),
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime(2100)
+                      );
+
+                      if(pickedDate != null ){
+                        String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
+                        setState(() {
+                          toEventDate.text = formattedDate;
+                        });
+                      }
+                    },
+                    validator: (value){
+                      if(value == null){
+                        return '행사 종료 일자를 입력해주세요';
+                      }
+                      return null;
+                    },
+                    style: GoogleFonts.lato(
+                      color: Colors.black87,
+                      fontSize: 24,
+                    ),
+                    decoration: InputDecoration(
+                      labelText: '행사 종료',
+                      hintText: '행사 종료 날을 입력해주세요.',
                       enabledBorder: OutlineInputBorder(
                         borderSide: BorderSide(
                           color: Colors.blue,
@@ -205,42 +288,6 @@ class _add_EventWidgetState extends State<add_Event> {
                       color: Colors.black87,
                       fontSize: 24,
                     ),
-                  ),
-                ),
-
-                Container(
-                  margin: const EdgeInsets.all(16.0),
-                  padding: const EdgeInsets.all(16.0),
-                  decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border.all(
-                        color: Colors.blue,
-                        width: 1.5,
-                    ),
-                      borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: DropdownButton(
-                    value: _selectedValue,
-                    items: _valueList.map(
-                        (value){
-                          return DropdownMenuItem(
-                            value: value,
-                            child: Text(value),
-                          );
-                        },
-                    ).toList(),
-                    onChanged: (value){
-                      setState(() {
-                        _selectedValue = value.toString();
-                      });
-                    },
-                    style: TextStyle(
-                      color: Colors.black54,
-                      fontSize: 20,
-                    ),
-                    isExpanded: true,
-                    dropdownColor: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
 
@@ -331,12 +378,20 @@ class _add_EventWidgetState extends State<add_Event> {
                           onPressed: () {
                             print('확인 버튼 pressed ...');
 
+                            add_new_event().then((result) {//가입 JSON post받음
+                              setState(() {
+                                print("성공 여부: " + result);
 
-                            //_addEvent(Event(DateTime.now(), '2', '3', '4', '5'));
-
-                            if(_formKey.currentState!.validate()){
-                              Navigator.pop(context, '이전 화면');
-                            }
+                                if(_formKey.currentState!.validate()){
+                                  Navigator.pop(context, '이전 화면');
+                                  Navigator.pop(context, '이전 화면');
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => EventWidget()),
+                                  );
+                                }
+                              });
+                            });
                           },
                           child: Text(
                               '확  인',

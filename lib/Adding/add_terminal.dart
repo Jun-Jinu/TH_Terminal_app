@@ -14,10 +14,6 @@ class _add_TerminalWidgetState extends State<add_Terminal> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final _formKey = GlobalKey<FormState>();
 
-  //카테고리 드롭 버튼 설정
-  final _valueList = ['행사 종류를 선택하세요.','일반 행사', '긴급 행사'];
-  var _selectedValue = '행사 종류를 선택하세요.';
-
   var _name = TextEditingController();
   var _ph = TextEditingController();
   var _address = TextEditingController();
@@ -411,7 +407,6 @@ class _add_TerminalWidgetState extends State<add_Terminal> {
                         child: ElevatedButton(
                           onPressed: () {
                             print('확인 버튼 pressed ...');
-
 
                             //_addEvent(Event(DateTime.now(), '2', '3', '4', '5'));
 

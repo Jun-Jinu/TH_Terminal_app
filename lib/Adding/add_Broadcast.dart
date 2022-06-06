@@ -1,7 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:turnhouse/Item_data.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:web_socket_channel/io.dart';
+import 'dart:convert';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:speech_to_text/speech_recognition_result.dart';
 
 class add_Broadcast extends StatefulWidget {
   const add_Broadcast({Key? key}) : super(key: key);
@@ -14,14 +20,47 @@ class _add_BroadcastWidgetState extends State<add_Broadcast> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final _formKey = GlobalKey<FormState>();
 
-
-  var _writer = TextEditingController();
   var _content = TextEditingController();
+
+  bool _speechEnabled = false;
+  String _lastWords = '';
+
+  stt.SpeechToText _speechToText = stt.SpeechToText();
+  final WebSocketChannel channel =
+  IOWebSocketChannel.connect("ws://3.39.144.176:8080/ws/announce");
+
+
+  void _initSpeech() async {
+    _speechEnabled = await _speechToText.initialize();
+    setState(() {});
+  }
+
+  void _stopListening() async {
+    await _speechToText.stop();
+    setState(() {});
+  }
+
+  void _startListening() async {
+    await _speechToText.listen(onResult: _onSpeechResult);
+    setState(() {});
+  }
+
+  void _onSpeechResult(SpeechRecognitionResult result) {
+    setState(() {
+      _content.text = result.recognizedWords;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _initSpeech();
+  }
 
   @override
   void dispose(){
-    _writer.dispose();
     _content.dispose();
+    channel.sink.close();
     super.dispose();
   }
 
@@ -55,6 +94,19 @@ class _add_BroadcastWidgetState extends State<add_Broadcast> {
             fontSize: 28,
           ),
         ),
+        actions: [
+          Padding(
+            padding: EdgeInsetsDirectional.fromSTEB(0, 7, 20, 7),
+            child: FloatingActionButton(
+              onPressed: _startListening,
+              tooltip: '방송 기록 중',
+              child: Icon(
+                _speechToText.isNotListening ? Icons.mic_off : Icons.mic,
+                size: 30,
+              ),
+            ),
+          ),
+        ],
         centerTitle: false,
         elevation: 2,
       ),
@@ -169,8 +221,12 @@ class _add_BroadcastWidgetState extends State<add_Broadcast> {
                           onPressed: () {
                             print('확인 버튼 pressed ...');
 
+                            Map data ={"townId": int.parse(context.read<User_info>().town_id), "content": _content.text};
+                            var json_data = json.encode(data);
 
-                            //_addEvent(Event(DateTime.now(), '2', '3', '4', '5'));
+                            channel.sink.add(json_data);
+                            print(json_data);
+
                             if(_formKey.currentState!.validate()){
                               Navigator.pop(context, '이전 화면');
                             }

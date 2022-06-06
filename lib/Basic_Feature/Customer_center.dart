@@ -21,11 +21,24 @@ class _Custemer_centerWidgetState extends State<Custemer_centerWidget> {
       _Customer_Service.add(customer_Service);
 
       customer_Service.date = DateTime.now();
-      customer_Service.title = '코딩하는 뇌가 고장났어요!';
-      customer_Service.sender = '문의한 전진우';
+      customer_Service.title = '단말기가 고장났어요!';
+      customer_Service.sender = '전진우';
       customer_Service.category = '고장';
-      customer_Service.content = '캡스톤으로 보고서를 쓰다가 갑자기 구현을 했더니'
-          '\n코딩하는 뇌가 과부화돼서 고장났어요!';
+      customer_Service.content = '아침에 일어났더니 단말기가 켜지지 않아요!';
+      customer_Service.answer_check = false;
+
+    });
+  }
+
+  void _addCustomer_Service2(Customer_Service customer_Service){
+    setState(() {
+      _Customer_Service.add(customer_Service);
+
+      customer_Service.date = DateTime.now();
+      customer_Service.title = '방송기능 사용 방법';
+      customer_Service.sender = '김성욱';
+      customer_Service.category = '질문';
+      customer_Service.content = '방송은 어떻게 하나요?';
       customer_Service.answer_check = false;
 
     });
@@ -176,6 +189,8 @@ class _Custemer_centerWidgetState extends State<Custemer_centerWidget> {
   }
   @override
   Widget build(BuildContext context) {
+    _addCustomer_Service(Customer_Service(DateTime.now(), '2', '3', '4', '5', false));
+    _addCustomer_Service2(Customer_Service(DateTime.now(), '2', '3', '4', '5', false));
     return Scaffold(
       key: scaffoldKey,
       appBar: AppBar(
@@ -204,22 +219,6 @@ class _Custemer_centerWidgetState extends State<Custemer_centerWidget> {
             fontSize: 22,
           ),
         ),
-        actions: [
-          IconButton(//위치조정 & 모양 기능 변경 필요
-            padding: EdgeInsetsDirectional.fromSTEB(10, 0, 40, 0),
-            icon: Icon(
-              Icons.plus_one_outlined,
-              color: Color(0xFF4391F1),
-              size: 30,
-            ),
-            onPressed: () {
-              print('IconButton pressed ...');
-
-              //테스트용 코드!!!
-              _addCustomer_Service(Customer_Service(DateTime.now(), '2', '3', '4', '5', false));
-            },
-          ),
-        ],
         centerTitle: false,
         elevation: 2,
       ),
@@ -254,7 +253,7 @@ class _Custemer_centerWidgetState extends State<Custemer_centerWidget> {
               ),
 
 
-              /* 버튼 삭제
+
               Row(
                 mainAxisSize: MainAxisSize.max,
                 children: [
@@ -292,7 +291,7 @@ class _Custemer_centerWidgetState extends State<Custemer_centerWidget> {
                     ),
                   ),
                 ],
-              ),*/
+              ),
 
 
               Row(

@@ -1,77 +1,80 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:turnhouse/Item_data.dart';
+import 'package:intl/intl.dart';
+import 'dart:convert';
+import 'package:turnhouse/http_func.dart';
+import 'package:turnhouse/Basic_Feature/Event.dart';
 
-class add_Enquiry extends StatefulWidget {
-  const add_Enquiry({Key? key}) : super(key: key);
+class modify_Event extends StatefulWidget {
+  final int e_id;
+  final String fromEventDate;
+  final String toEventDate;
+  final String title;
+  final String content;
+
+  const modify_Event(this.e_id, this.fromEventDate, this.toEventDate,
+      this.title, this.content);
 
   @override
-  _add_EnquiryWidgetState createState() => _add_EnquiryWidgetState();
+  _modify_EventWidgetState createState() => _modify_EventWidgetState();
 }
 
-class _add_EnquiryWidgetState extends State<add_Enquiry> {
+class _modify_EventWidgetState extends State<modify_Event> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final _formKey = GlobalKey<FormState>();
 
-  //카테고리 드롭 버튼 설정
-  final _valueList = ['문의 종류를 선택하세요.', '질문', '고장', '계정 관리','단말기 관리', '기타'];
-  var _selectedValue = '문의 종류를 선택하세요.';
+  Future<String> modify_existing_event() async {
+    final String url = "http://3.39.183.150:8080/api/events/${widget.e_id.toString()}";
+    Map data = {"townId": int.parse(context.read<User_info>().town_id), "title": _title.text, "content": _content.text, "fromEventDate": _fromEventData.text, "toEventDate": _toEventDate.text };
 
-  var _title = TextEditingController();
-  var _writer = TextEditingController();
-  var _content = TextEditingController();
+    var body = json.encode(data);
+    String status;
+
+    Http_post post_data = Http_post(url, body);
+
+    var event_data = await post_data.getJsonData();
+
+    //status로 받아와서 성공여부만 표시
+    status = event_data['status'];
+
+    return status;
+  }
+
+  TextEditingController _fromEventData = TextEditingController();//행사시작
+  TextEditingController _toEventDate = TextEditingController();//행사 끝
+  TextEditingController _title = TextEditingController();//제목
+  TextEditingController _content = TextEditingController();//내용
+
+
+  @override
+  void initState(){
+    _fromEventData = TextEditingController(text: widget.fromEventDate);//행사시작
+    _toEventDate = TextEditingController(text: widget.toEventDate);//행사 끝
+    _title = TextEditingController(text: widget.title);//제목
+    _content = TextEditingController(text: widget.content);//내용
+  }
 
   @override
   void dispose(){
+    _fromEventData.dispose();
+    _toEventDate.dispose();
     _title.dispose();
-    _writer.dispose();
     _content.dispose();
     super.dispose();
   }
 
-  Widget _buildItemWidget(Event event){
-    return ListTile(
-      onTap: () {},
-      leading: Text(
-          ""
-      ),
-      title: Text(
-          '[ ' + ' ] ' + event.title
-      ),
-      textColor: Colors.white,
-      shape: RoundedRectangleBorder(
-          side: BorderSide(
-            color: Colors.white24,
-            width: 0.5,
-          )
-      ),
-      subtitle: Text(
-          '여긴 부제'
-      ),
-      trailing: TextButton(
-        onPressed: () {
-          print('수정 버튼 pressed ...');
-
-        },
-        child: Text('수정'),
-      ),
-
-    );
-
-  }
   @override
   Widget build(BuildContext context) {
+    print(widget.e_id);
     return Scaffold(
       key: scaffoldKey,
       appBar: AppBar(
         backgroundColor: Color(0xFF252735),
         automaticallyImplyLeading: false,
         leading: IconButton(
-          //borderColor: Colors.transparent,
-          //borderRadius: 30,
-          //borderWidth: 1,
-          //buttonSize: 60,
           icon: Icon(
             Icons.arrow_back_rounded,
             color: Color(0xFF4391F1),
@@ -107,7 +110,7 @@ class _add_EnquiryWidgetState extends State<add_Enquiry> {
                     Padding(
                       padding: EdgeInsetsDirectional.fromSTEB(30, 10, 0, 10),
                       child: Text(
-                        '기타 문의',
+                        '마을 행사 수정',
                         style: GoogleFonts.lato(
                           color: Colors.white,
                           fontSize: 40,
@@ -117,7 +120,139 @@ class _add_EnquiryWidgetState extends State<add_Enquiry> {
                   ],
                 ),
 
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: TextFormField(
+                    controller: _fromEventData,
+                    readOnly: true,
+                    onTap: () async {
+                      DateTime? pickedDate = await showDatePicker(
+                          context: context, initialDate: DateTime.parse(widget.fromEventDate),
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime(2100)
+                      );
 
+                      if(pickedDate != null ){
+                        String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
+                        setState(() {
+                          _fromEventData.text = formattedDate;
+                        });
+                      }
+                      print(_fromEventData.text);
+                    },
+                    validator: (value){
+                      if(value == null){
+                        return '행사 시작 일자를 입력해주세요';
+                      }
+                      return null;
+                    },
+                    style: GoogleFonts.lato(
+                      color: Colors.black87,
+                      fontSize: 24,
+                    ),
+                    decoration: InputDecoration(
+                      labelText: '행사 시작',
+                      hintText: '행사 시작 날을 입력해주세요.',
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Colors.blue,
+                          width: 1.5,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Color(0xFF4291F2),
+                          width: 3,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      errorBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Colors.redAccent,
+                          width: 1.5,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      focusedErrorBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Colors.redAccent,
+                          width: 3,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
+                  ),
+                ),
+
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: TextFormField(
+                    controller: _toEventDate,
+                    readOnly: true,
+                    onTap: () async {
+                      DateTime? pickedDate = await showDatePicker(
+                          context: context, initialDate: DateTime.parse(widget.toEventDate),
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime(2100)
+                      );
+                      if(pickedDate != null ){
+                        String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
+                        setState(() {
+                          _toEventDate.text = formattedDate;
+                        });
+                      }
+                    },
+                    validator: (value){
+                      if(value == null){
+                        return '행사 종료 일자를 입력해주세요';
+                      }
+                      return null;
+                    },
+                    style: GoogleFonts.lato(
+                      color: Colors.black87,
+                      fontSize: 24,
+                    ),
+                    decoration: InputDecoration(
+                      labelText: '행사 종료',
+                      hintText: '행사 종료 날을 입력해주세요.',
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Colors.blue,
+                          width: 1.5,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Color(0xFF4291F2),
+                          width: 3,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      errorBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Colors.redAccent,
+                          width: 1.5,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      focusedErrorBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Colors.redAccent,
+                          width: 3,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
+                  ),
+                ),
 
                 Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -168,95 +303,6 @@ class _add_EnquiryWidgetState extends State<add_Enquiry> {
                       color: Colors.black87,
                       fontSize: 24,
                     ),
-                  ),
-                ),
-
-
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: TextFormField(
-                    controller: _writer,
-                    validator: (value){
-                      if(value == null || value.isEmpty){
-                        return '작성자 정보를 입력해주세요';
-                      }
-                      return null;
-                    },
-                    decoration: InputDecoration(
-                      labelText: '작성자',
-                      hintText: '작성자 정보를 입력해주세요.',
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Colors.blue,
-                          width: 1.5,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0xFF4291F2),
-                          width: 3,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      errorBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Colors.redAccent,
-                          width: 1.5,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      focusedErrorBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Colors.redAccent,
-                          width: 3,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
-                    style: GoogleFonts.lato(
-                      color: Colors.black87,
-                      fontSize: 20,
-                    ),
-                  ),
-                ),
-
-                Container(
-                  margin: const EdgeInsets.all(16.0),
-                  padding: const EdgeInsets.all(16.0),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: Border.all(
-                      color: Colors.blue,
-                      width: 1.5,
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: DropdownButton(
-                    value: _selectedValue,
-                    items: _valueList.map(
-                          (value){
-                        return DropdownMenuItem(
-                          value: value,
-                          child: Text(value),
-                        );
-                      },
-                    ).toList(),
-                    onChanged: (value){
-                      setState(() {
-                        _selectedValue = value.toString();
-                      });
-                    },
-                    style: TextStyle(
-                      color: Colors.black54,
-                      fontSize: 20,
-                    ),
-                    isExpanded: true,
-                    dropdownColor: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
 
@@ -346,11 +392,21 @@ class _add_EnquiryWidgetState extends State<add_Enquiry> {
                         child: ElevatedButton(
                           onPressed: () {
                             print('확인 버튼 pressed ...');
-                            //_addEvent(Event(DateTime.now(), '2', '3', '4', '5'));
 
-                            if(_formKey.currentState!.validate()){
-                              Navigator.pop(context, '이전 화면');
-                            }
+                            modify_existing_event().then((result) {//가입 JSON post받음
+                              setState(() {
+                                print("성공 여부: " + result);
+
+                                if(_formKey.currentState!.validate()){
+                                  Navigator.pop(context, '이전 화면');
+                                  Navigator.pop(context, '이전 화면');
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => EventWidget()),
+                                  );
+                                }
+                              });
+                            });
                           },
                           child: Text(
                             '확  인',

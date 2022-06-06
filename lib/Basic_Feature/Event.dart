@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:turnhouse/Adding/add_Event.dart';
 import 'package:turnhouse/Item_data.dart';
-import 'package:turnhouse/http_get.dart';
+import 'package:turnhouse/http_func.dart';
+import 'package:turnhouse/modify_Event.dart';
 
 class EventWidget extends StatefulWidget {
   const EventWidget({Key? key}) : super(key: key);
@@ -14,10 +16,8 @@ class EventWidget extends StatefulWidget {
 class _EventWidgetState extends State<EventWidget> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
-  final _event = <Event>[];
-
   Future <List<dynamic>> getevent() async {
-    final String url = "http://3.39.183.150:8080/api/events/3";
+    final String url = "http://3.39.183.150:8080/api/events/${context.read<User_info>().town_id}";
 
     Http_get get_data = Http_get(url);
     var event_data = await get_data.getJsonData();
@@ -89,6 +89,8 @@ class _EventWidgetState extends State<EventWidget> {
                   child: ListView.builder(
                     itemCount: snapshot.data?.length,
                     itemBuilder: (context, index){
+                      int id = snapshot.data?[index]['id'];
+                      //print(id);
                       int townId = snapshot.data?[index]['townId'];
                       //print(townId);
                       String title = snapshot.data?[index]['title'];
@@ -160,58 +162,18 @@ class _EventWidgetState extends State<EventWidget> {
                             onPressed: () {
                               print('삭제 버튼 pressed ...');
 
-                              showDialog(
-                                  context: context,
-                                  barrierDismissible: false,
-                                  builder: (BuildContext context){
-                                    return AlertDialog(
-                                      title: Row(
-                                        children: <Widget>[
-                                          Icon(
-                                            Icons.dangerous_outlined,
-                                            color: Colors.red,
-                                            size: 22,
-                                          ),
-                                          Text(
-                                            ' 경고',
-                                            style: GoogleFonts.lato(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 22,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      content: SingleChildScrollView(
-                                        child: ListBody(
-                                          children: <Widget>[
-                                            Text('선택한 행사 기록을 삭제합니다.'),
-                                            Text('정말로 해당 기록을 삭제하시겠습니까?'),
-                                          ],
-                                        ),
-                                      ),
-                                      actions: <Widget>[
-                                        TextButton(
-                                          child: Text('취소'),
-                                          onPressed: (){
-                                            Navigator.of(context).pop();
-                                          },
-                                        ),
-                                        TextButton(
-                                          child: Text('확인'),
-                                          onPressed: (){
-                                            Navigator.of(context).pop();
-                                          },
-                                        ),
-                                      ],
-                                    );
-                                  }
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        modify_Event(id, fromEventDate, toEventDate, title, content)),
                               );
                             },
                             style: OutlinedButton.styleFrom(
                               side: BorderSide(width: 1.0, color: Color(0xFF4291F2)),
                             ),
                             child: Text(
-                              '삭제',
+                              '수정',
                               style: GoogleFonts.lato(
                                 color: Color(0xFF4291F2),
                               ),
@@ -228,7 +190,6 @@ class _EventWidgetState extends State<EventWidget> {
                     Expanded(
                       child: Padding(
                         padding: EdgeInsetsDirectional.fromSTEB(10, 10, 10, 40),
-
                         child: Container(
                           width: 350,
                           height: 80,

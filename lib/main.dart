@@ -1,18 +1,28 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:turnhouse/Home.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:easy_debounce/easy_debounce.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:turnhouse/http_get.dart';
+import 'package:turnhouse/http_func.dart';
 import 'package:turnhouse/Item_data.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider<User_info>(create: (_) => User_info()),
+      ],
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -26,6 +36,13 @@ class MyApp extends StatelessWidget {
 
         primarySwatch: Colors.blue,
       ),
+      localizationsDelegates: [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ],
+      supportedLocales: [
+        const Locale('ko', 'KR'),
+      ],
       home: const LoginWidget(),
     );
   }
@@ -54,12 +71,24 @@ class _LoginWidgetState extends State<LoginWidget> {
 
     user = User(//성공 실패 코드 나눌 필요 있을듯
         login_data['status'].toString(),
-        "EX"
-        //login_data['data']['userId'].toString()
+        login_data['data']['id'].toString()
+      //login_data['data']['userId'].toString()
     );
 
-    print("수신정보 1: ${user.status}, 2: ${user.userId}");
+    print("수신정보 1: ${user.status}, 2: ${user.id}");
     return user;
+  }
+
+  Future<String> get_town_info(String user_id) async {
+    final String url = "http://3.39.183.150:8080/api/town/${user_id}";
+    Http_get get_data = Http_get(url);
+    String town_id;
+
+    var town_data = await get_data.getJsonData();
+
+    town_id = town_data['data'][0]['id'].toString();
+
+    return town_id;
   }
 
   TextEditingController? idController;
@@ -259,6 +288,11 @@ class _LoginWidgetState extends State<LoginWidget> {
                             print("상태: " + status);
 
                             if(_formKey.currentState!.validate() && status == "OK"){
+                              context.read<User_info>().set_user_id(result.id);
+                              //마을 고유번호 호출 및 저장
+                              get_town_info(result.id).then((town_id){
+                                context.read<User_info>().set_town_id(town_id);
+                              });
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(builder: (context) => MainWidget()),
@@ -274,8 +308,6 @@ class _LoginWidgetState extends State<LoginWidget> {
                             }
                           });
                         });
-
-
                       },
                       style: ButtonStyle(
                         backgroundColor: MaterialStateProperty.all(Color(0xFF4291F2)),

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:turnhouse/Item_data.dart';
 import 'package:turnhouse/Adding/add_message.dart';
 import 'dart:convert';
-import 'package:turnhouse/http_get.dart';
+import 'package:turnhouse/http_func.dart';
 
 class MessageWidget extends StatefulWidget {
   const MessageWidget({Key? key}) : super(key: key);
@@ -16,13 +17,23 @@ class _MessageWidgetState extends State<MessageWidget> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
   Future <List<dynamic>> getmessage() async {
-    final String url = "http://3.39.183.150:8080/api/message/3";
+    final String url = "http://3.39.183.150:8080/api/message/${context.read<User_info>().town_id}";
 
     Http_get get_data = Http_get(url);
     var message_data = await get_data.getJsonData();
 
     print(message_data['data']);
     return message_data['data'];
+  }
+
+  Future <String> delete_message(String message_id) async {
+    final String url = "http://3.39.183.150:8080/api/message/${message_id}";
+
+    Http_delete del_data = Http_delete(url);
+    var log_del = await del_data.getJsonData();
+
+    print(log_del['status']);
+    return log_del['status'];
   }
 
   @override
@@ -103,8 +114,7 @@ class _MessageWidgetState extends State<MessageWidget> {
                                 builder: (BuildContext context){
                                   return AlertDialog(
                                     backgroundColor: Color(0xFF252735),
-                                    title: Text(
-                                          '[ ' + target + ' ] ' + "문자 전송 내역",
+                                    title: Text("[ ${target == 'a' ? "마을 전체" : (target == 'm' ? "관리자" : "보호자")} ] 문자 전송 내역",
                                       style: GoogleFonts.lato(
                                         color: Colors.white,
                                         fontSize: 30,
@@ -199,7 +209,20 @@ class _MessageWidgetState extends State<MessageWidget> {
                                         TextButton(
                                           child: Text('확인'),
                                           onPressed: (){
-                                            //_deleteMessage(message);
+                                            print(id);//
+
+                                            delete_message(id.toString()).then((result) {//가입 JSON post받음
+                                              setState(() {
+                                                print("결과: " + result);
+
+                                                Navigator.pop(context, '이전 화면');
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(builder: (context) => MessageWidget()),
+                                                );
+                                              });
+                                            });
+
                                             Navigator.of(context).pop();
                                           },
                                         ),
@@ -240,7 +263,6 @@ class _MessageWidgetState extends State<MessageWidget> {
                             onPressed: () {
                               print('기능 버튼 pressed ...');
 
-                              //_addEvent(Event(DateTime.now(), '2', '3'));
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(builder: (context) => add_Message()),

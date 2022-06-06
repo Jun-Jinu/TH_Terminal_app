@@ -1,9 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:turnhouse/Item_data.dart';
 import 'dart:convert';
-import 'package:turnhouse/http_get.dart';
+import 'package:turnhouse/http_func.dart';
+import 'package:turnhouse/Basic_Feature/Message.dart';
 
 class add_Message extends StatefulWidget {
   const add_Message({Key? key}) : super(key: key);
@@ -18,7 +20,7 @@ class _add_MessageWidgetState extends State<add_Message> {
 
   Future<Message> get_message_info() async {
     final String url = "http://3.39.183.150:8080/api/message";
-    Map data = {"townId": 3, "target": _valueList == "마을 전체" ? 'a' : (_valueList == "마을 관리자" ? 'm' : 'p') , "content": _content.text};
+    Map data = {"townId": int.parse(context.read<User_info>().town_id), "target": _valueList == "마을 전체" ? 'a' : (_valueList == "마을 관리자" ? 'm' : 'p') , "content": _content.text};
 
     var body = json.encode(data);
     Message msg;
@@ -233,6 +235,11 @@ class _add_MessageWidgetState extends State<add_Message> {
 
                                 if(_formKey.currentState!.validate()){
                                   Navigator.pop(context, '이전 화면');
+                                  Navigator.pop(context, '이전 화면');
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => MessageWidget()),
+                                  );
                                 }
                               });
                             });

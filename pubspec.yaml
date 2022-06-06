@@ -45,6 +45,15 @@ dependencies:
   geolocator: ^8.2.1
   easy_rich_text: ^1.0.4
   cupertino_icons: ^1.0.4
+  http: ^0.13.4
+  web_socket_channel: ^2.2.0
+  speech_to_text: ^5.5.0
+
+  flutter_localizations:
+    sdk: flutter
+  flutter_provider: ^2.1.0
+  provider: ^6.0.3
+
 
 dev_dependencies:
   flutter_test:

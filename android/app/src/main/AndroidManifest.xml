@@ -2,8 +2,13 @@
     package="com.example.turnhouse">
    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+   <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+   <uses-permission android:name="android.permission.INTERNET"/>
+   <uses-permission android:name="android.permission.BLUETOOTH"/>
+   <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+   <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
    <application
-        android:label="turnhouse"
+        android:label="[관리자]집켜줘"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
