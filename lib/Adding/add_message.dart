@@ -18,26 +18,18 @@ class _add_MessageWidgetState extends State<add_Message> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final _formKey = GlobalKey<FormState>();
 
-  Future<Message> get_message_info() async {
+  Future<String> get_message_info() async {
     final String url = "http://3.39.183.150:8080/api/message";
-    Map data = {"townId": int.parse(context.read<User_info>().town_id), "target": _valueList == "마을 전체" ? 'a' : (_valueList == "마을 관리자" ? 'm' : 'p') , "content": _content.text};
+    Map data = {"townId": int.parse(context.read<User_info>().town_id), "target": (_valueList == "마을 전체") ? 'a' : (_valueList == "마을 관리자" ? 'm' : 'p') , "content": _content.text};
 
     var body = json.encode(data);
-    Message msg;
 
     Http_post post_data = Http_post(url, body);
 
-    var messge_data = await post_data.getJsonData();
+    //var message_data =
+    await post_data.getJsonData();
 
-    //조회 일단 안되는데 굳이 필요한가??
-    msg = Message(//성공 실패 코드 나눌 필요 있을듯
-        messge_data['id'].toString(), messge_data['townId'].toString(), messge_data['target'],
-        messge_data['content'], messge_data['success'], messge_data['time'].toString()
-    );
-
-    print(messge_data['id'].toString() + messge_data['townId'].toString() + messge_data['target']);
-
-    return msg;
+    return "Good";
   }
 
   //카테고리 드롭 버튼 설정
@@ -226,21 +218,16 @@ class _add_MessageWidgetState extends State<add_Message> {
                         child: ElevatedButton(
                           onPressed: () {
                             print('전송 버튼 pressed ...');
-                            String content;
-
                             get_message_info().then((result) {//가입 JSON post받음
                               setState(() {
-                                content = result.content;
-                                print("내용: " + content);
+                                print("내용: " + result);
 
-                                if(_formKey.currentState!.validate()){
-                                  Navigator.pop(context, '이전 화면');
-                                  Navigator.pop(context, '이전 화면');
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(builder: (context) => MessageWidget()),
-                                  );
-                                }
+                                Navigator.pop(context, '이전 화면');
+                                Navigator.pop(context, '이전 화면');
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => MessageWidget()),
+                                );
                               });
                             });
 

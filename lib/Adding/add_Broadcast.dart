@@ -8,6 +8,7 @@ import 'package:web_socket_channel/io.dart';
 import 'dart:convert';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:speech_to_text/speech_recognition_result.dart';
+import 'package:turnhouse/Basic_Feature/Broadcast.dart';
 
 class add_Broadcast extends StatefulWidget {
   const add_Broadcast({Key? key}) : super(key: key);
@@ -227,9 +228,12 @@ class _add_BroadcastWidgetState extends State<add_Broadcast> {
                             channel.sink.add(json_data);
                             print(json_data);
 
-                            if(_formKey.currentState!.validate()){
-                              Navigator.pop(context, '이전 화면');
-                            }
+                            Navigator.pop(context, '이전 화면');
+                            Navigator.pop(context, '이전 화면');
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => BroadcastWidget()),
+                            );
                           },
                           child: Text(
                             '확  인',

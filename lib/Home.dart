@@ -6,7 +6,7 @@ import 'package:turnhouse/Basic_Feature/Broadcast.dart';
 import 'package:turnhouse/Basic_Feature/Message.dart';
 import 'package:turnhouse/Basic_Feature/Event.dart';
 import 'package:turnhouse/Basic_Feature/town_info.dart';
-import 'package:turnhouse/MyLocation.dart';
+//import 'package:turnhouse/MyLocation.dart';
 import 'package:turnhouse/http_func.dart';
 import 'package:easy_rich_text/easy_rich_text.dart';
 import 'package:flutter/services.dart';
@@ -28,12 +28,12 @@ class _MainWidgetState extends State<MainWidget> {
   double? longitude3; // 경도
 
   Future<Weather> getWeather() async {
-    MyLocation myLocation = MyLocation();
-    await myLocation.getMyCurrentLocation();
+    //MyLocation myLocation = MyLocation();
+    //await myLocation.getMyCurrentLocation();
 
     //현재 위도, 경도
-    latitude3 = myLocation.latitude2;
-    longitude3 = myLocation.longitude2;
+    latitude3 = 37.54783024;//= myLocation.latitude2;
+    longitude3 = 127.07471134;//myLocation.longitude2;
     print(latitude3);
     print(longitude3);
     Weather weather;
@@ -155,6 +155,20 @@ class _MainWidgetState extends State<MainWidget> {
                         width: width * 0.4,
                         height: height * 0.2,
                         child: EasyRichText(
+    /*'현재 온도 : 16.7°\n\n'
+                              '14.3°  /  '
+                              '24.2°',
+                          defaultStyle: TextStyle(fontSize: 16, color: Colors.white),
+                          patternList: [
+                            EasyRichTextPattern(
+                              targetString: '14.3°',
+                              style: TextStyle(color: Colors.blue),
+                            ),
+                            EasyRichTextPattern(
+                              targetString: '24.2°',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ],*/
                         '현재 온도 : ${snapshot.data?.temp}°\n\n'
                             '${snapshot.data?.tempMin}°  /  '
                             '${snapshot.data?.tempMax}°',

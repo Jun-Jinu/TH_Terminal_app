@@ -31,6 +31,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: '집켜줘 마을방송 시스템',
       theme: ThemeData(
 
@@ -326,7 +327,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                       onPressed: () {
                         print('signup pressed ...');
 
-                        launch('https://www.google.com/search?q=%EC%BA%A1%EC%8A%A4%ED%86%A4%EB%94%94%EC%9E%90%EC%9D%B8+%EC%9D%B4%EA%B1%B0+%EB%AD%94%EA%B0%80%EC%9A%94&sxsrf=ALiCzsbS_MMJHGdSSP79VlJv6Tt5z-Ib6w%3A1651854340085&ei=BEx1Yr7lBITy-QbntZwg&oq=%EC%BA%A1%EC%8A%A4%ED%86%A4%EB%94%94%EC%9E%90%EC%9D%B8+%EC%9D%B4%EA%B1%B0+&gs_lcp=Cgdnd3Mtd2l6EAEYAjIFCCEQoAEyBQghEKABMgUIIRCgAToHCAAQRxCwAzoECCMQJzoFCAAQgARKBAhBGABKBAhGGABQ5gNY3Alg8BxoAXABeACAAZoBiAGVBpIBAzAuNpgBAKABAcgBCsABAQ&sclient=gws-wiz');
+                        launch('https://www.google.com/');
                       },
                       child: Text('회원가입'),
                     ),

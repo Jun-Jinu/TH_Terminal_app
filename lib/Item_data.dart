@@ -36,11 +36,10 @@ class Message {//클리어
   String target;//수신자 설정(전체_a, 마을관리자_m, 보호자_p)
   String content;//내용
   bool success;
-  String date;
 
   Message(
       this.id, this.townId, this.target,
-      this.content, this.success, this.date
+      this.content, this.success
   );
 }
 
