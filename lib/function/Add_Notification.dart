@@ -1,65 +1,42 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:turnhouse/Item_data.dart';
+import 'package:provider/provider.dart';
+import 'package:th_iot/Item_data.dart';
+import 'package:intl/intl.dart';
+import 'dart:convert';
+import 'package:datetime_picker_formfield/datetime_picker_formfield.dart';
 
-class add_Enquiry extends StatefulWidget {
-  const add_Enquiry({Key? key}) : super(key: key);
+import 'package:th_iot/function/View_Notification.dart';
+
+class add_Notification extends StatefulWidget {
+  const add_Notification({Key? key}) : super(key: key);
 
   @override
-  _add_EnquiryWidgetState createState() => _add_EnquiryWidgetState();
+  _add_NotiWidgetState createState() => _add_NotiWidgetState();
 }
 
-class _add_EnquiryWidgetState extends State<add_Enquiry> {
+class _add_NotiWidgetState extends State<add_Notification> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final _formKey = GlobalKey<FormState>();
 
-  //카테고리 드롭 버튼 설정
-  final _valueList = ['문의 종류를 선택하세요.', '질문', '고장', '계정 관리','단말기 관리', '기타'];
-  var _selectedValue = '문의 종류를 선택하세요.';
+  Notifications temp_noti = Notifications(DateTime.now(), "", "");
 
-  var _title = TextEditingController();
-  var _writer = TextEditingController();
-  var _content = TextEditingController();
+  final format = DateFormat("yyyy-MM-dd HH:mm");
+
+  var _time = TextEditingController();//알람 시간
+  var _title = TextEditingController();//제목
+  var _content = TextEditingController();//내용
+
 
   @override
   void dispose(){
+    _time.dispose();
     _title.dispose();
-    _writer.dispose();
     _content.dispose();
     super.dispose();
   }
 
-  Widget _buildItemWidget(Event event){
-    return ListTile(
-      onTap: () {},
-      leading: Text(
-          ""
-      ),
-      title: Text(
-          '[ ' + ' ] ' + event.title
-      ),
-      textColor: Colors.white,
-      shape: RoundedRectangleBorder(
-          side: BorderSide(
-            color: Colors.white24,
-            width: 0.5,
-          )
-      ),
-      subtitle: Text(
-          '여긴 부제'
-      ),
-      trailing: TextButton(
-        onPressed: () {
-          print('수정 버튼 pressed ...');
-
-        },
-        child: Text('수정'),
-      ),
-
-    );
-
-  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -68,10 +45,6 @@ class _add_EnquiryWidgetState extends State<add_Enquiry> {
         backgroundColor: Color(0xFF252735),
         automaticallyImplyLeading: false,
         leading: IconButton(
-          //borderColor: Colors.transparent,
-          //borderRadius: 30,
-          //borderWidth: 1,
-          //buttonSize: 60,
           icon: Icon(
             Icons.arrow_back_rounded,
             color: Color(0xFF4391F1),
@@ -107,7 +80,7 @@ class _add_EnquiryWidgetState extends State<add_Enquiry> {
                     Padding(
                       padding: EdgeInsetsDirectional.fromSTEB(30, 10, 0, 10),
                       child: Text(
-                        '기타 문의',
+                        '알람 추가',
                         style: GoogleFonts.lato(
                           color: Colors.white,
                           fontSize: 40,
@@ -117,7 +90,143 @@ class _add_EnquiryWidgetState extends State<add_Enquiry> {
                   ],
                 ),
 
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: DateTimeField(
+                    format: format,
+                    validator: (value){
+                      if(value == null){
+                        return '알람 일자와 시간을 입력해주세요';
+                      }
+                      return null;
+                    },
+                    style: GoogleFonts.lato(
+                      color: Colors.black87,
+                      fontSize: 24,
+                    ),
+                    onShowPicker: (context, currentValue) async {
+                      final date = await showDatePicker(
+                          context: context,
+                          firstDate: DateTime(2000),
+                          initialDate: currentValue ?? DateTime.now(),
+                          lastDate: DateTime(2100));
+                      if (date != null) {
+                        final time = await showTimePicker(
+                          context: context,
+                          initialTime:
+                          TimeOfDay.fromDateTime(currentValue ?? DateTime.now()),
+                        );
+                        temp_noti.date = DateTimeField.combine(date, time);
+                        return DateTimeField.combine(date, time);
+                      } else {
+                        return currentValue;
+                      }
+                    },
+                    decoration: InputDecoration(
+                      labelText: '알람 시간',
+                      hintText: '알람을 설정할 일자와 시간을 입력해주세요.',
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Colors.blue,
+                          width: 1.5,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
 
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Color(0xFF4291F2),
+                          width: 3,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      errorBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Colors.redAccent,
+                          width: 1.5,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      focusedErrorBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Colors.redAccent,
+                          width: 3,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
+                  ),
+                ),
+
+                /*Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: TextFormField(
+                    controller: _time,
+                    readOnly: true,
+                    onTap: () async {
+                      DateTime? pickedDate = await showDatePicker(
+                          context: context, initialDate: DateTime.now(),
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime(2100)
+                      );
+
+                      if(pickedDate != null ){
+                        String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
+                        setState(() {
+                          _time.text = formattedDate;
+                        });
+                      }
+                      print(_time.text);
+                    },
+                    validator: (value){
+                      if(value == null){
+                        return '행사 시작 일자를 입력해주세요';
+                      }
+                      return null;
+                    },
+                    style: GoogleFonts.lato(
+                      color: Colors.black87,
+                      fontSize: 24,
+                    ),
+                    decoration: InputDecoration(
+                      labelText: '행사 시작',
+                      hintText: '행사 시작 날을 입력해주세요.',
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Colors.blue,
+                          width: 1.5,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Color(0xFF4291F2),
+                          width: 3,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      errorBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Colors.redAccent,
+                          width: 1.5,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      focusedErrorBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Colors.redAccent,
+                          width: 3,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
+                  ),
+                ),*/
 
                 Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -168,95 +277,6 @@ class _add_EnquiryWidgetState extends State<add_Enquiry> {
                       color: Colors.black87,
                       fontSize: 24,
                     ),
-                  ),
-                ),
-
-
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: TextFormField(
-                    controller: _writer,
-                    validator: (value){
-                      if(value == null || value.isEmpty){
-                        return '작성자 정보를 입력해주세요';
-                      }
-                      return null;
-                    },
-                    decoration: InputDecoration(
-                      labelText: '작성자',
-                      hintText: '작성자 정보를 입력해주세요.',
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Colors.blue,
-                          width: 1.5,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0xFF4291F2),
-                          width: 3,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      errorBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Colors.redAccent,
-                          width: 1.5,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      focusedErrorBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Colors.redAccent,
-                          width: 3,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
-                    style: GoogleFonts.lato(
-                      color: Colors.black87,
-                      fontSize: 20,
-                    ),
-                  ),
-                ),
-
-                Container(
-                  margin: const EdgeInsets.all(16.0),
-                  padding: const EdgeInsets.all(16.0),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: Border.all(
-                      color: Colors.blue,
-                      width: 1.5,
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: DropdownButton(
-                    value: _selectedValue,
-                    items: _valueList.map(
-                          (value){
-                        return DropdownMenuItem(
-                          value: value,
-                          child: Text(value),
-                        );
-                      },
-                    ).toList(),
-                    onChanged: (value){
-                      setState(() {
-                        _selectedValue = value.toString();
-                      });
-                    },
-                    style: TextStyle(
-                      color: Colors.black54,
-                      fontSize: 20,
-                    ),
-                    isExpanded: true,
-                    dropdownColor: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
 
@@ -346,11 +366,18 @@ class _add_EnquiryWidgetState extends State<add_Enquiry> {
                         child: ElevatedButton(
                           onPressed: () {
                             print('확인 버튼 pressed ...');
-                            //_addEvent(Event(DateTime.now(), '2', '3', '4', '5'));
 
-                            if(_formKey.currentState!.validate()){
-                              Navigator.pop(context, '이전 화면');
-                            }
+                            temp_noti.title = _title.text;
+                            temp_noti.content = _content.text;
+
+                            context.read<Notice>().add(temp_noti);
+
+                            Navigator.pop(context, '이전 화면');
+                            Navigator.pop(context, '이전 화면');
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => NotificationWidget()),
+                            );
                           },
                           child: Text(
                             '확  인',

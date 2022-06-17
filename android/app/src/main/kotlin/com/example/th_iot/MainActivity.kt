@@ -1,4 +1,4 @@
-package com.example.turnhouse
+package com.example.th_iot
 
 import io.flutter.embedding.android.FlutterActivity
 

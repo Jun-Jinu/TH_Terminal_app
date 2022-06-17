@@ -1,38 +1,42 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/painting.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:turnhouse/Item_data.dart';
-import 'package:turnhouse/http_func.dart';
+import 'package:th_iot/Item_data.dart';
+import 'package:th_iot/function/http_func.dart';
 
-class TownInfoWidget extends StatefulWidget {
-  const TownInfoWidget({Key? key}) : super(key: key);
+
+class EventWidget extends StatefulWidget {
+  const EventWidget({Key? key}) : super(key: key);
 
   @override
-  _TownInfoWidgetState createState() => _TownInfoWidgetState();
+  _EventWidgetState createState() => _EventWidgetState();
 }
 
-class _TownInfoWidgetState extends State<TownInfoWidget> {
+class _EventWidgetState extends State<EventWidget> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
-  Future <List<dynamic>> get_terminal() async {
-    final String url = "http://3.39.183.150:8080/api/terminal/${context.read<User_info>().town_id}";
+  Future <List<dynamic>> getevent() async {
+    final String url = "http://3.39.183.150:8080/api/events/${context.read<User_info>().town_id}";
 
     Http_get get_data = Http_get(url);
-    var terminal_data = await get_data.getJsonData();
+    var event_data = await get_data.getJsonData();
 
-    print(terminal_data['data']);
-    return terminal_data['data'];
+    print(event_data['data']);
+    return event_data['data'];
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       key: scaffoldKey,
-      appBar: AppBar(//
+      appBar: AppBar(
         backgroundColor: Color(0xFF252735),
         automaticallyImplyLeading: false,
         leading: IconButton(
+          //borderColor: Colors.transparent,
+          //borderRadius: 30,
+          //borderWidth: 1,
+          //buttonSize: 60,
           icon: Icon(
             Icons.arrow_back_rounded,
             color: Color(0xFF4391F1),
@@ -56,44 +60,46 @@ class _TownInfoWidgetState extends State<TownInfoWidget> {
       ),
       backgroundColor: Color(0xFF1A1925),
       body: Center(
-        child: FutureBuilder<List<dynamic>>(
-          future: get_terminal(),
-          builder: (context, snapshot) {
-            if (snapshot.hasData == false) {
-              return CircularProgressIndicator();
-            }
-            return Column(
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(40, 10, 10, 10),
-                      child: Text(
-                        '마을 정보',
-                        style: GoogleFonts.lato(
-                          color: Colors.white,
-                          fontSize: 40,
+        child:  FutureBuilder<List<dynamic>>(
+            future: getevent(),
+            builder: (context, snapshot) {
+              if (snapshot.hasData == false) {
+                return CircularProgressIndicator();
+              }
+              return Column(
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      Padding(
+                        padding: EdgeInsetsDirectional.fromSTEB(40, 10, 10, 10),
+                        child: Text(
+                          '마을 행사 내역',
+                          style: GoogleFonts.lato(
+                            color: Colors.white,
+                            fontSize: 40,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: snapshot.data?.length,
-                    itemBuilder: (context, index) {
-                      int terminal_id = snapshot.data?[index]['id'];
-                      //print(terminal_id);
-                      String name = snapshot.data?[index]['name'];
-                      //print(name);
-                      String phone = snapshot.data?[index]['phone'];
-                      //print(phone);
-                      String address = snapshot.data?[index]['address'];
-                      //print(address);
+                    ],
+                  ),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: snapshot.data?.length,
+                      itemBuilder: (context, index){
+                        //int townId = snapshot.data?[index]['townId'];
+                        //print(townId);
+                        String title = snapshot.data?[index]['title'];
+                        //print(title);
+                        String content = snapshot.data?[index]['content'];
+                        //print(content);
+                        String fromEventDate = snapshot.data?[index]['fromEventDate'];
+                        //print(fromEventDate);
+                        String toEventDate = snapshot.data?[index]['toEventDate'];
+                        //print(toEventDate);
 
-                      return Container(
+                        return Container(
                           child: ListTile(
                             onTap: () {
                               showDialog(
@@ -102,8 +108,8 @@ class _TownInfoWidgetState extends State<TownInfoWidget> {
                                   builder: (BuildContext context){
                                     return AlertDialog(
                                       backgroundColor: Color(0xFF252735),
-                                      title:Text(
-                                        name + '의 단말기 정보',
+                                      title: Text(
+                                        '[ ' + fromEventDate + ' ~ ' +  toEventDate + ' ] ' + title,
                                         style: GoogleFonts.lato(
                                           color: Colors.white,
                                           fontSize: 30,
@@ -113,8 +119,7 @@ class _TownInfoWidgetState extends State<TownInfoWidget> {
                                         child: ListBody(
                                           children: <Widget>[
                                             Text(
-                                              ' •  사용자 전화번호: ' + phone + '\n\n' +
-                                                  ' •  사용자 주소: ' + address + '\n\n',
+                                              ' •  행사 내용: ' + content,
                                               style: GoogleFonts.lato(
                                                 color: Colors.white70,
                                                 fontSize: 20,
@@ -136,12 +141,12 @@ class _TownInfoWidgetState extends State<TownInfoWidget> {
                               );
                             },
                             leading: Icon(
-                              Icons.home_filled,
+                              Icons.event,
                               color: Colors.white,
                               size: 24.0,
                             ),
                             title: Text(
-                              name,
+                                '[ ' + fromEventDate + ' ~ ' +  toEventDate + ' ] ' + title
                             ),
                             textColor: Colors.white,
                             shape: RoundedRectangleBorder(
@@ -150,23 +155,14 @@ class _TownInfoWidgetState extends State<TownInfoWidget> {
                                   width: 0.5,
                                 )
                             ),
-                            subtitle: Text(
-                              phone,
-                              style: GoogleFonts.lato(
-                                color: Colors.white60,
-                              ),
-                            ),
-                            trailing: Text(
-                                '주소: ' + address
-                            ),
                           ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
-                ),
-              ],
-            );
-          }
+                ],
+              );
+            }
         ),
       ),
     );

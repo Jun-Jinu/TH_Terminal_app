@@ -1,346 +1,314 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:turnhouse/Basic_Feature/Customer_center.dart';
-import 'package:turnhouse/Basic_Feature/Broadcast.dart';
-import 'package:turnhouse/Basic_Feature/Message.dart';
-import 'package:turnhouse/Basic_Feature/Event.dart';
-import 'package:turnhouse/Basic_Feature/town_info.dart';
-//import 'package:turnhouse/MyLocation.dart';
-import 'package:turnhouse/http_func.dart';
-import 'package:easy_rich_text/easy_rich_text.dart';
-import 'package:flutter/services.dart';
-import 'package:turnhouse/Item_data.dart';
+import 'package:th_iot/function/Setting.dart';
+import 'package:th_iot/function/View_Broadcast.dart';
+import 'package:th_iot/function/View_Event.dart';
+import 'package:th_iot/function/View_Notification.dart';
+import 'package:th_iot/Item_data.dart';
+import 'package:th_iot/function/http_func.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:web_socket_channel/io.dart';
+import 'package:flutter_tts/flutter_tts.dart';
+import 'package:web_socket_channel/status.dart' as status;
 
-const apiKey = '38c5dd9bd8cfd2ef10e5d910725383c9';
-
-class MainWidget extends StatefulWidget {//
-  const MainWidget({Key? key}) : super(key: key);
+class MyHomePage extends StatefulWidget {
+  const MyHomePage({Key? key}) : super(key: key);
 
   @override
-  _MainWidgetState createState() => _MainWidgetState();
+  State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MainWidgetState extends State<MainWidget> {
-  final scaffoldKey = GlobalKey<ScaffoldState>();
+class _MyHomePageState extends State<MyHomePage> {
 
-  double? latitude3; // 위도
-  double? longitude3; // 경도
-
-  Future<Weather> getWeather() async {
-    //MyLocation myLocation = MyLocation();
-    //await myLocation.getMyCurrentLocation();
-
-    //현재 위도, 경도
-    latitude3 = 37.54783024;//= myLocation.latitude2;
-    longitude3 = 127.07471134;//myLocation.longitude2;
-    print(latitude3);
-    print(longitude3);
-    Weather weather;
-
-    //날씨 API - url로 경도, 위도의 날씨 json get하고 parsing
-    Http_get network = Http_get('http://api.openweathermap.org/data/2.5/weather?lat=$latitude3&lon=$longitude3&appid=$apiKey');
-
-    var weatherData = await network.getJsonData();
-    print(weatherData);
-
-    weather = Weather(
-        (weatherData['main']['temp'] - 273.15).toStringAsFixed(1),
-        (weatherData["main"]["temp_min"] - 273.15).toStringAsFixed(1),
-        (weatherData["main"]["temp_max"] - 273.15).toStringAsFixed(1),
-        weatherData["weather"][0]["main"],
-        weatherData["weather"][0]["id"]
-    );
-
-    print("유져 고유번호 : " + context.read<User_info>().user_id);
-    print("마을 고유번호 : " + context.read<User_info>().town_id);
-    print('(디버깅)최고/최저 온도: ' + weather.temp.toString() + ' ' + weather.tempMin.toString());
-    return weather;
-  }
 
   @override
   Widget build(BuildContext context) {
-    //회전 방지
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+
+    Future <dynamic> emergency () async {
+      final String url = "http://3.39.183.150:8080/api/emergency/${context.read<User_info>().town_id}";
+
+      Http_get get_data = Http_get(url);
+      var event_data = await get_data.getJsonData();
+
+      print(event_data);
+      return event_data;
+    }
+
+    final FlutterTts tts = FlutterTts();
+    tts.setLanguage('ko');
+    tts.setSpeechRate(0.4);
+
+    final WebSocketChannel channel =
+    IOWebSocketChannel.connect('ws://3.39.144.176:8080/ws/announce');
 
     var width = MediaQuery.of(context).size.width;
     var height = MediaQuery.of(context).size.height;
-    
+
     return Scaffold(
-      key: scaffoldKey,
       backgroundColor: Color(0xFF1A1925),
       body: Center(
-        child: FutureBuilder(
-          future: getWeather(),
-          builder: (context, AsyncSnapshot<Weather> snapshot){
-            if (snapshot.hasData == false) {
-              return CircularProgressIndicator();
-            }
-            return Column(
-              mainAxisSize: MainAxisSize.max,
+        child: Column(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  crossAxisAlignment: CrossAxisAlignment.center,
+                Container(
+                  width: width * 0.3,
+                  height: height * 0.4,
+                  child:ElevatedButton(
+                    onPressed: () {
+                      print('summit pressed ...');
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => NotificationWidget()),
+                      );
+                    },
+                    style: ButtonStyle(
+                      //backgroundColor: MaterialStateProperty.all(Color(0xFF252735)),
+                      //textStyle: GoogleFonts.lato(color: Colors.white),
+                    ),
+                    child: Text(
+                      '개인알람',
+                      style: GoogleFonts.gothicA1(
+                        color: Colors.white,
+                        fontSize: 40,
+                      ),
+                    ),
+                  ),
+                ),
+
+                Column(
                   children: [
                     Container(
-                      width: 100,
-                      height: 100,
+                      width: width * 0.3,
+                      height: height * 0.3,
                       //padding: EdgeInsetsDirectional.fromSTEB(0, 10, 0, 10),
                       child: Image.asset(
                         'assets/logo.png',
                       ),
                     ),
                     Container(
-                      width: 210,
-                      height: 65,
-                      child:ElevatedButton.icon(
-                        onPressed: () {
-                          print('고객센터 pressed ...');
-
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => Custemer_centerWidget()),
-                          );
-                        },
-                        style: ButtonStyle(
-                          backgroundColor: MaterialStateProperty.all(Color(0xFF4291F2)),
-                          //textStyle: GoogleFonts.lato(color: Colors.white),
+                      width: width * 0.3,
+                      height: height * 0.1,
+                      child: Text(
+                        '${context.read<User_info>().user_name}님 환영합니다.\n',
+                        style: GoogleFonts.gothicA1(
+                          color: Colors.green,
+                          fontSize: 16  ,
                         ),
-                        icon: Icon(
-                          Icons.phone_callback,
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                        label: Text('고객센터'),
+                        textAlign: TextAlign.center,
                       ),
+                    ),
+                    StreamBuilder(//웹소켓 수신
+                      // 채널의 스트림을 stream 항목에 설정. widget을 통해 MyHomePage의 필드에 접근 가능
+                      stream: channel.stream,
+                      // 채널 stream에 변화가 발생하면 빌더 호출
+                      builder: (context, snapshot) {
+                        var r_data;
+                        //글자 content['content']
+                        if(snapshot.hasData){
+                          r_data = snapshot.data;
+                          var content = jsonDecode(r_data);
+                          tts.speak(content['content']);
+                          return Text("도착한 방송이 있습니다.",
+                              style: GoogleFonts.gothicA1(
+                                color: Colors.blue,
+                                fontSize: 12 ),
+                          );
+                        }
+                        else
+                          return Text("");
+                        /*return AlertDialog(
+                          buttonPadding: EdgeInsets.all(25.0),
+                          titlePadding: EdgeInsets.fromLTRB(30.0, 20.0, 40.0, 40.0),
+                          backgroundColor: Color(0xFF252735),
+                          title:Text(
+                            '방송이 도착했습니다.',
+                            style: GoogleFonts.lato(
+                              color: Colors.white,
+                              fontSize: 50,
+                            ),
+                          ),
+                          content: Text(
+                            content['content'],
+                            style: GoogleFonts.lato(
+                              color: Colors.white,
+                              fontSize: 30,
+                            ),
+                          ),
+                          actions: <Widget>[
+                            TextButton(
+                              child: Text('확인',
+                                style: GoogleFonts.lato(
+                                  fontSize: 30,
+                                ),
+                              ),
+                              onPressed: (){
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        );*/
+                      },
                     ),
                   ],
                 ),
 
                 Container(
-                  margin: EdgeInsets.all(10.0),
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                    color: Color(0xFF252735),
-                  ),
-                  width: width * 0.8,
-                  height: height * 0.2,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Container(
-                        alignment: Alignment.centerLeft,
-                        width: width * 0.3,
-                        height: height * 0.2,
-                        padding: EdgeInsetsDirectional.fromSTEB(width * 0.02, 0, 0, 0),
-                        child: snapshot.data!.code == 800
-                            ? Icon(Icons.wb_sunny, size: 100, color: Colors.white)
-                            : snapshot.data!.code / 100 == 8 ||
-                            snapshot.data!.code / 100 == 2
-                            ? Icon(Icons.wb_cloudy, size: 100, color: Colors.white)
-                            : snapshot.data!.code / 100 == 3 ||
-                            snapshot.data!.code / 100 == 5
-                            ? Icon(Icons.beach_access, size: 100, color: Colors.white)
-                            : snapshot.data!.code / 100 == 6
-                            ? Icon(Icons.ac_unit, size: 100, color: Colors.white)
-                            : Icon(Icons.cloud_circle, size: 100, color: Colors.white),
-                      ),
+                  width: width * 0.3,
+                  height: height * 0.4,
+                  child:ElevatedButton(
+                    onPressed: () {
+                      print('summit pressed ...');
 
-
-                      // 온도
-                      Container(
-                        alignment: Alignment.center,
-                        width: width * 0.4,
-                        height: height * 0.2,
-                        child: EasyRichText(
-    /*'현재 온도 : 16.7°\n\n'
-                              '14.3°  /  '
-                              '24.2°',
-                          defaultStyle: TextStyle(fontSize: 16, color: Colors.white),
-                          patternList: [
-                            EasyRichTextPattern(
-                              targetString: '14.3°',
-                              style: TextStyle(color: Colors.blue),
-                            ),
-                            EasyRichTextPattern(
-                              targetString: '24.2°',
-                              style: TextStyle(color: Colors.red),
-                            ),
-                          ],*/
-                        '현재 온도 : ${snapshot.data?.temp}°\n\n'
-                            '${snapshot.data?.tempMin}°  /  '
-                            '${snapshot.data?.tempMax}°',
-                          defaultStyle: TextStyle(fontSize: 16, color: Colors.white),
-                          patternList: [
-                            EasyRichTextPattern(
-                              targetString: '${snapshot.data?.tempMin}°',
-                              style: TextStyle(color: Colors.blue),
-                            ),
-                            EasyRichTextPattern(
-                              targetString: '${snapshot.data?.tempMax}°',
-                              style: TextStyle(color: Colors.red),
-                            ),
-                          ],
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-
-                    ],
-                  ),
-                ),
-
-                Row(
-
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(10, 10, 10, 10),
-
-                      child:Container(
-                        width: width * 0.35,
-                        height: height * 0.2,
-                        child:ElevatedButton(
-                          onPressed: () {
-                            print('summit pressed ...');
-
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => MessageWidget()),
-                            );
-                          },
-                          style: ButtonStyle(
-                            //backgroundColor: MaterialStateProperty.all(Colors.deepPurpleAccent),
-                            //backgroundColor: MaterialStateProperty.all(Color(0xFF252735)),
-                            //textStyle: GoogleFonts.lato(color: Colors.white),
-                          ),
-                          child: Text(
-                            '문자\n하기',
-                            style: GoogleFonts.lato(
-                              color: Colors.white,
-                              fontSize: 30,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    Align(
-                      alignment: AlignmentDirectional(0.05, 0),
-                      child: Padding(
-                        padding: EdgeInsetsDirectional.fromSTEB(10, 10, 10, 10),
-                        child:Container(
-                          width: width * 0.35,
-                          height: height * 0.2,
-                          child:ElevatedButton(
-                            onPressed: () {
-                              print('summit pressed ...');
-
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => BroadcastWidget()),
-                              );
-                            },
-                            style: ButtonStyle(
-                              //backgroundColor: MaterialStateProperty.all(Colors.deepPurpleAccent),
-                              //backgroundColor: MaterialStateProperty.all(Color(0xFF252735)),
-                              //textStyle: GoogleFonts.lato(color: Colors.white),
-                            ),
-                            child: Text(
-                              '방송\n하기',
-                              style: GoogleFonts.lato(
-                                color: Colors.white,
-                                fontSize: 30,
+                      showDialog(
+                          context: context,
+                          //barrierDismissible: false,
+                          builder: (BuildContext context){
+                            return AlertDialog(
+                              buttonPadding: EdgeInsets.all(25.0),
+                              titlePadding: EdgeInsets.fromLTRB(30.0, 20.0, 40.0, 40.0),
+                              backgroundColor: Color(0xFF252735),
+                              title:Text(
+                                '긴급호출을 합니다',
+                                style: GoogleFonts.lato(
+                                  color: Colors.white,
+                                  fontSize: 50,
+                                ),
                               ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
+                              actions: <Widget>[
+                                TextButton(
+                                  child: Text('취소',
+                                    style: GoogleFonts.lato(
+                                      fontSize: 30,
+                                    ),
+                                  ),
+                                  onPressed: (){
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                                TextButton(
+                                  child: Text('확인',
+                                    style: GoogleFonts.lato(
+                                      fontSize: 30,
+                                    ),
+                                  ),
+                                  onPressed: (){
+                                    emergency().then((result) {//가입 JSON post받음
+                                      setState(() {
+                                        Navigator.pop(context, '이전 화면');
+                                      });
+                                    });
 
-                  ],
-                ),
-
-                //아래 버튼 2개
-                Row(
-
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(10, 10, 10, 10),
-
-                      child:Container(
-                        width: width * 0.35,
-                        height: height * 0.2,
-                        child:ElevatedButton(
-                          onPressed: () {
-                            print('summit pressed ...');
-
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => EventWidget()),
+                                  },
+                                ),
+                              ],
                             );
-                          },
-                          style: ButtonStyle(
-                            //backgroundColor: MaterialStateProperty.all(Colors.deepPurpleAccent),
-                            //backgroundColor: MaterialStateProperty.all(Color(0xFF252735)),
-                            //textStyle: GoogleFonts.lato(color: Colors.white),
-                          ),
-                          child: Text(
-                            '행사\n관리',
-                            style: GoogleFonts.lato(
-                              color: Colors.white,
-                              fontSize: 30,
-                            ),
-                          ),
-                        ),
+                          }
+                      );
+                    },
+                    style: ButtonStyle(
+                      //backgroundColor: MaterialStateProperty.all(Color(0xFF252735)),
+                      //textStyle: GoogleFonts.lato(color: Colors.white),
+                    ),
+                    child: Text(
+                      '긴급호출',
+                      style: GoogleFonts.gothicA1(
+                        color: Colors.white,
+                        fontSize: 40,
                       ),
                     ),
-
-                    Align(
-                      alignment: AlignmentDirectional(0.05, 0),
-                      child: Padding(
-                        padding: EdgeInsetsDirectional.fromSTEB(10, 10, 10, 10),
-                        child:Container(
-                          width: width * 0.35,
-                          height: height * 0.2,
-                          child:ElevatedButton(
-                            onPressed: () {
-                              print('summit pressed ...');
-
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => TownInfoWidget()),
-                              );
-                            },
-                            style: ButtonStyle(
-                              //backgroundColor: MaterialStateProperty.all(Colors.deepPurpleAccent),
-                              //backgroundColor: MaterialStateProperty.all(Color(0xFF252735)),
-                              //textStyle: GoogleFonts.lato(color: Colors.white),
-                            ),
-                            child: Text(
-                              '마을\n정보',
-                              style: GoogleFonts.lato(
-                                color: Colors.white,
-                                fontSize: 30,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ],
-            );
-          },
+            ),
+
+
+            //아래 버튼 2개
+            Row(
+              //mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  width: width * 0.3,
+                  height: height * 0.4,
+                  child:ElevatedButton(
+                    onPressed: () {
+                      print('summit pressed ...');
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => EventWidget()),
+                      );
+
+                      //tts.speak("김성욱님 별풍선 100개 감사합니다.");
+                    },
+                    child: Text(
+                      '행사조회',
+                      style: GoogleFonts.gothicA1(
+                        color: Colors.white,
+                        fontSize: 40,
+                      ),
+                    ),
+                  ),
+                ),
+
+                Container(
+                  width: width * 0.3,
+                  height: height * 0.4,
+                  child:ElevatedButton(
+                    onPressed: () {
+                      print('summit pressed ...');
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => BroadcastWidget()),
+                      );
+                    },
+                    child: Text(
+                      '방송조회',
+                      style: GoogleFonts.gothicA1(
+                        color: Colors.white,
+                        fontSize: 40,
+                      ),
+                    ),
+                  ),
+                ),
+
+                Container(
+                  width: width * 0.3,
+                  height: height * 0.4,
+                  child:ElevatedButton(
+                    onPressed: () {
+                      print('summit pressed ...');
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => SettingWidget()),
+                      );
+                    },
+                    child: Text(
+                      '환경설정',
+                      style: GoogleFonts.gothicA1(
+                        color: Colors.white,
+                        fontSize: 40,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
   }
 }
+

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:turnhouse/Item_data.dart';
-import 'package:turnhouse/Adding/add_Broadcast.dart';
-import 'package:turnhouse/http_func.dart';
+import 'package:th_iot/Item_data.dart';
+import 'package:th_iot/function/http_func.dart';
+
 
 class BroadcastWidget extends StatefulWidget {
   const BroadcastWidget({Key? key}) : super(key: key);
@@ -71,7 +71,7 @@ class _BroadcastState extends State<BroadcastWidget> {
       backgroundColor: Color(0xFF1A1925),
       body: Center(
         child: FutureBuilder<List<dynamic>>(
-          future: getBroadcast(),
+            future: getBroadcast(),
             builder: (context, snapshot){
               if (snapshot.hasData == false) {
                 return CircularProgressIndicator();
@@ -100,11 +100,9 @@ class _BroadcastState extends State<BroadcastWidget> {
                       itemBuilder: (context, index){
                         int id = snapshot.data?[index]['id'];
                         //print(id);
-                        int townId = snapshot.data?[index]['townId'];
+                        //int townId = snapshot.data?[index]['townId'];
                         //print(townId);
                         String content = snapshot.data?[index]['content'];
-                        //print(content);
-                        String createdDate = snapshot.data?[index]['createdDate'];
                         //print(content);
 
                         return Container(
@@ -117,7 +115,7 @@ class _BroadcastState extends State<BroadcastWidget> {
                                     return AlertDialog(
                                       backgroundColor: Color(0xFF252735),
                                       title: Text(
-                                        '[${createdDate}] \n방송 내역',
+                                          '방송 내역',
                                         style: GoogleFonts.lato(
                                           color: Colors.white,
                                           fontSize: 30,
@@ -154,7 +152,7 @@ class _BroadcastState extends State<BroadcastWidget> {
                               size: 24.0,
                             ),
                             title: Text(
-                                '[${createdDate}]\n마을 방송 내역'
+                                '방송한 내역'
                             ),
                             textColor: Colors.white,
                             shape: RoundedRectangleBorder(
@@ -191,7 +189,7 @@ class _BroadcastState extends State<BroadcastWidget> {
                                         content: SingleChildScrollView(
                                           child: ListBody(
                                             children: <Widget>[
-                                              Text('선택한 방송 기록을 삭제합니다.'),
+                                              Text('선택한 행사 기록을 삭제합니다.'),
                                               Text('정말로 해당 기록을 삭제하시겠습니까?'),
                                             ],
                                           ),
@@ -238,42 +236,6 @@ class _BroadcastState extends State<BroadcastWidget> {
                         );
                       },
                     ),
-                  ),
-                  Row(
-                    mainAxisSize: MainAxisSize.max,
-                    children: [
-                      Expanded(
-                        child: Padding(
-                          padding: EdgeInsetsDirectional.fromSTEB(10, 10, 10, 40),
-
-                          child:Container(
-                            width: 350,
-                            height: 80,
-                            child:ElevatedButton(
-                              onPressed: () {
-                                print('방송하기 버튼 pressed ...');
-
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => add_Broadcast()),
-                                );
-                              },
-                              style: ButtonStyle(
-                                backgroundColor: MaterialStateProperty.all(Color(0xFF4391F1)),
-                              ),
-                              child: Text(
-                                '방 송 하 기',
-                                style: GoogleFonts.lato(
-                                  color: Colors.white,
-                                  fontSize: 40,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
                   ),
                 ],
               );
